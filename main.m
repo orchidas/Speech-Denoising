@@ -1,18 +1,19 @@
 clf;
 clear all;
-newpath = 'C:\Users\ORCHISAMA\Documents\MATLAB\Speech\BG\ACF\';
-addpath(strcat(newpath,'composite\'));
-soundpath = strcat(newpath,'Noisy speech samples\');
+parentpath = fileparts(pwd);
+addpath(strcat(parentpath,'\composite\'));
+soundpath = strcat(parentpath,'\Noisy speech samples\');
 filename = 'sp12';
-type = 'train';
+type = 'white';
 orderType = 'estimated';
-saveToPath = [newpath, 'Final files\Results\Rnew all noise ', orderType, ' order\',type,'\'];
+saveToPath = ['Results\Rnew all noise ', orderType, ' order\',type,'\'];
 SNR = [0,5,10];
 %writing results to txt file
 [fileID, message] = fopen([saveToPath,filename,'_',type,'_results.txt'],'w+');
-fprintf(fileID,'%s %s %s %s %s %s %s %s\r\n','R(new)','Q_chosen','log(Q)','SNR','SegSNR_before','SegSNR_after','PESQ','Average_order');
-%need to somehow store J1,J2,nq values for voiced and silent frame for each
-%Q and each SNR
+fprintf(fileID,'%s %s %s %s %s %s %s %s\r\n','R(new)','Q_chosen','log(Q)',...
+    'SNR','SegSNR_before','SegSNR_after','PESQ','Average_order');
+
+%store J1,J2,nq values for voiced and silent frame for each Q and each SNR
 J1v = zeros(3,7,10);
 J1s = zeros(3,7,10);
 J2v = zeros(3,7,10);
@@ -23,12 +24,12 @@ nqs = zeros(3,7,10);
 for snri = 1:length(SNR)
     
     %read a corrupted audio signal
-    [x,fs] = wavread(strcat(soundpath, type,'\',num2str(SNR(snri)),'dB\',filename,'_',type,'_sn',num2str(SNR(snri)),'.wav'));
+    %[x,fs] = wavread(strcat(soundpath, type,'\',num2str(SNR(snri)),'dB\',filename,'_',type,'_sn',num2str(SNR(snri)),'.wav'));
     %read a clean audio signal
     [z,fs] = wavread(strcat(soundpath,'clean\',filename,'.wav'));
-    %wn = wavread([soundpath,'white_noise.wav']);
-    %[noise,snr] = makeSnr(z, wn, SNR(snri));
-    %x = noise + z;
+    wn = wavread([soundpath,'white_noise.wav']);
+    [noise,snr] = makeSnr(z, wn, SNR(snri));
+    x = noise + z;
     y=x';
     z=z';
 
@@ -117,7 +118,7 @@ for snri = 1:length(SNR)
             [nq_nom,Jc]=intersections(nqi,J1i,nqi,J2i);
             
             if m < 3
-                J2_desired = 0.25*(m+1)*Jc;
+                J2_desired = (0.25*(m+1)*(Jc-min(J2i))) + min(J2i);
             else
                 J2_desired = (0.25*(m-3)*(max(J2i)-Jc))+ Jc;
             end
@@ -262,9 +263,9 @@ for snri = 1:length(SNR)
         
         %PESQ
         psq = pesq(fs,strcat(soundpath,'clean\',filename,'.wav'),...
-            strcat(saveToPath, filename,'_Q',num2str(m),'_',type,'_sn',num2str(SNR(snri)),'_enhanced.wav'))
-        fprintf(fileID,'%f %s %s %d %f %f %f %d\r\n', R, ['Q',num2str(m),'=',num2str(mean(Q_arr))], ['n=',num2str(log10(mean(Q_arr)))], ...
-            SNR(snri), segsnr_before, segsnr_after, psq, round(mean(order)));
+            strcat(saveToPath, filename,'_Q',num2str(m),'_',type,'_sn',num2str(SNR(snri)),'_enhanced.wav'));
+        fprintf(fileID,'%f %s %s %d %f %f %f %d\r\n', R, ['Q',num2str(m),'=',num2str(mean(Q_arr))],...
+            ['n=',num2str(log10(mean(Q_arr)))], SNR(snri), segsnr_before, segsnr_after, psq, round(mean(order)));
         close all;
         
     end
