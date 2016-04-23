@@ -2,8 +2,8 @@
 clear all;
 close all;
 type = ['white ';'babble';'train '];
-orderType = 'fixed';
-loadFromPath = ['C:\Users\ORCHISAMA\Documents\MATLAB\Speech\BG\ACF\Final files\Results\Rnew all noise ',orderType,' order\'];
+orderType = 'estimated';
+loadFromPath = ['Results\Rnew all noise ',orderType,' order\'];
 noise = cellstr(type);
 noisename = '';
 fig = 1;
@@ -52,6 +52,7 @@ for i = 1:3
         title([num2str((j-1)*5),'dB',' ',noisename]);
         legend(h,strLabel);
         saveas(figure(fig),[loadFromPath,noisename,'\','J1_J2 plot for',num2str((j-1)*5),'dB.fig']);
+        saveas(figure(fig),[loadFromPath,noisename,'\','J1_J2 plot for',num2str((j-1)*5),'dB.jpg']);
         fig = fig+1; 
     end
 end
