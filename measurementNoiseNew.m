@@ -1,6 +1,5 @@
 function [R] = measurementNoiseNew(xseg,fs)
-%new method of calculating measurement noise based on PSD
-
+%new method of calculating measurement noise variance based on PSD
 
 numFrame = size(xseg,1);
 noise_cov = zeros(1,numFrame);
@@ -30,7 +29,6 @@ for k = 1:numFrame
         noise_cov(k) = var(xseg(k,:));
     end
 end
-
 R = max(noise_cov)
 end
 

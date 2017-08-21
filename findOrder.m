@@ -36,8 +36,7 @@ for i = 1:totseg
         stem(cpacf,'filled','MarkerSize',4);xlabel('Lag');ylabel('Cumulative PACF');title(text);
         grid on;
         hold on;
-        h = plot(0.7*range(cpacf)*ones(1,T),'r');
-        set(h,'LineWidth',2);
+        plot(0.7*range(cpacf)*ones(1,T),'r');
         hold off;
         xlabel('Lags');ylabel('Cumulative PACF');
     end
