@@ -1,4 +1,4 @@
-function [] = KF_speech(filename, noiseType, orderType)
+function [cleanSpeech] = tuned_kalman_speech_noizeus(filename, noiseType, orderType)
 %Applies tuned Kalman filter with order estimation on noisy speech.
 %filename - name of .wav speech file from NOIZEUS
 %noiseType - white, train or babble
@@ -30,14 +30,14 @@ fprintf(fileID,'%s %s %s %s %s %s %s %s\r\n','R(new)','Q_chosen','log(Q)',...
 for snri = 1:length(SNR)
     
     %read a clean audio signal
-    [z,fs] = wavread(strcat(soundpath,'clean\',filename,'.wav'));
+    [z,fs] = audioread(strcat(soundpath,'clean\',filename,'.wav'));
     %read a corrupted audio signal
     if(strcmp(noiseType, 'white') == 1)
-        wn = wavread([soundpath,'white_noise.wav']);
+        wn = audioread([soundpath,'white_noise.wav']);
         [noise,snr] = makeSNR(z, wn, SNR(snri));
         y = noise + z;
     else
-        [y,fs] = wavread(strcat(soundpath, noiseType,'\', num2str(SNR(snri)),...
+        [y,fs] = audioread(strcat(soundpath, noiseType,'\', num2str(SNR(snri)),...
             'dB\',filename,'_',type,'_sn',num2str(SNR(snri)),'.wav'));
     end
     y=y';
@@ -50,11 +50,13 @@ for snri = 1:length(SNR)
     totseg=ceil(length(y)/(l-overlap));
     segment=zeros(totseg,l);
     zseg=zeros(totseg,l);
+    
     for i=1:totseg-1
         segment(i,1:l)=y(1,start:start+l-1);
         zseg(i,1:l)=z(1,start:start+l-1);
         start=(l-overlap)*i+1;
     end
+    
     segment(totseg,1:length(y)-start+1)=y(start:length(y));
     zseg(totseg,1:length(z)-start+1)=z(start:length(z));
     cleanspeech=zeros(totseg,l);
@@ -165,6 +167,7 @@ for snri = 1:length(SNR)
                 cleanspeech(i,j)=X(end);
                 
             end
+            
             %adjust a posteriori error covariance matrix dimensions
             if(i< totseg)
                 t2 = zeros(order(i),order(i));
@@ -223,9 +226,9 @@ for snri = 1:length(SNR)
         subplot(3,1,1);plot((1:length(z))/fs,z);title('original speech');axis([0, length(z)/fs, -1, 1]);
         subplot(3,1,2);plot((1:length(y))/fs,y,'k');title('corrupted speech');axis([0, length(y)/fs, -1, 1]);
         subplot(3,1,3);plot((1:length(cleanSpeech))/fs,cleanSpeech,'r');title('cleaned speech');axis([0, length(cleanSpeech)/fs, -1, 1]);
-        wavplay(y,fs);
-        wavplay(cleanSpeech,fs);
-        wavwrite(cleanSpeech,fs,strcat(saveToPath,filename,'_Q',num2str(m),'_',noiseType,'_sn',num2str(SNR(snri)),'_enhanced.wav'));
+        soundsc(y,fs);
+        soundsc(cleanSpeech,fs);
+        audiowrite(cleanSpeech,fs,strcat(saveToPath,filename,'_Q',num2str(m),'_',noiseType,'_sn',num2str(SNR(snri)),'_enhanced.wav'));
         saveas(figure(2),[saveToPath,'Waveform_',filename,'_Q',num2str(m),'_',noiseType,'_sn',num2str(SNR(snri))]);
         
         figure(3);
